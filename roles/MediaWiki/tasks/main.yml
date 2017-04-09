@@ -20,6 +20,16 @@
 - name: remove existing httpd html directory
   file: path=/var/www/html state=absent recurse=no
  
+- name: Download and install haproxy
+  yum: name=haproxy state=present
+
+- name: Configure the haproxy cnf file with hosts
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
+  notify: restart haproxy
+
+- name: Start the haproxy service
+  service: name=haproxy state=started enabled=yes
+
 - name: copy mediwiki
   command: cp -r /tmp/mediwiki /var/www/html
 - name: copy mediwiki configuration
@@ -33,5 +43,4 @@
 - name: configure db host
   replace: dest=/var/www/html/wp-config.php regexp='localhost' replace="{{ lookup('aws_rds_endpoint_name_from_instance_name', ('eu-west-1', db_name)) }}"
  
-- name: start httpd and ensure started on boot
-  service: name=httpd state=stopped enabled=yes
+
