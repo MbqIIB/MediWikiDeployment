@@ -1,0 +1,66 @@
+---
+sec_MediWiki_app_name: secMediWikiApp
+sec_MediWiki_app_rules:
+- proto: tcp
+  from_port: 80
+  to_port: 80
+  group_name: "{{ sec_MediWiki_lb_name }}"
+
+key_name: <key_pair>
+MediWiki_base_ami: <base_ami>
+MediWiki_instance_type: t1.micro
+lc_MediWiki_name: MediWiki
+lc_MediWiki_assign_public_ip: no
+lc_MediWiki_ami: ami-2d07a85e
+lc_MediWiki_instance_type: t1.micro
+lc_MediWiki_key_name: <key_pair>
+
+asg_MediWiki_name: MediWiki
+asg_MediWiki_availability_zones:
+  - eu-west-1a
+  - eu-west-1b
+asg_MediWiki_lc_name: MediWiki
+asg_MediWiki_healthcheck_period: 500
+asg_MediWiki_healthcheck_type: ELB
+asg_MediWiki_replace_all_instances: yes
+asg_MediWiki_min_size: 2
+asg_MediWiki_max_size: 10
+asg_MediWiki_desired_capacity: 2
+asg_MediWiki_load_balancers: "{{ lb_MediWiki_name }}"
+asg_MediWiki_tags:
+  - Name: "{{ asg_MediWiki_name }}"
+
+cwsp_MediWiki_scale_down_name: "MediWiki_node_scale_down_policy"
+cwsp_MediWiki_scale_down_adjustment_type: "ChangeInCapacity"
+cwsp_MediWiki_scale_down_scaling_adjustment: -1
+cwsp_MediWiki_scale_down_min_adjustment_step: -1
+cwsp_MediWiki_scale_down_cooldown: 120
+
+cwsp_MediWiki_scale_up_name: "MediWiki_node_scale_up_policy"
+cwsp_MediWiki_scale_up_adjustment_type: "ChangeInCapacity"
+cwsp_MediWiki_scale_up_scaling_adjustment: 1
+cwsp_MediWiki_scale_up_min_adjustment_step: 1
+cwsp_MediWiki_scale_up_cooldown: 120
+
+cwa_MediWiki_high_cpu_name: "MediWiki node - high cpu"
+cwa_MediWiki_high_cpu_metric: "CPUUtilization"
+cwa_MediWiki_high_cpu_namespace: "AWS/EC2"
+cwa_MediWiki_high_cpu_statistic: "Average"
+cwa_MediWiki_high_cpu_comparison: ">="
+cwa_MediWiki_high_cpu_threshold: 60.0
+cwa_MediWiki_high_cpu_period: 60
+cwa_MediWiki_high_cpu_evaluation_periods: 1
+cwa_MediWiki_high_cpu_unit: "Percent"
+cwa_MediWiki_high_cpu_description: "Alarm when cache node CPU utilisation is higher than 60% over a 1min period for 1 periods."
+
+cwa_MediWiki_low_cpu_name: "MediWiki node - low cpu"
+cwa_MediWiki_low_cpu_metric: "CPUUtilization"
+cwa_MediWiki_low_cpu_namespace: "AWS/EC2"
+cwa_MediWiki_low_cpu_statistic: "Average"
+cwa_MediWiki_low_cpu_comparison: "<="
+cwa_MediWiki_low_cpu_threshold: 20.0
+cwa_MediWiki_low_cpu_period: 60
+cwa_MediWiki_low_cpu_evaluation_periods: 3
+cwa_MediWiki_low_cpu_unit: "Percent"
+cwa_MediWiki_low_cpu_description: "This will alarm when cpu usage average is lower than 20% for 1 minute."
+

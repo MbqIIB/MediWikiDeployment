@@ -1,0 +1,37 @@
+---
+- name: create mediwiki group
+  group: name=mediwiki state=present
+- name: create mediwiki user
+  user: name=mediwiki state=present createhome=no shell=/bin/false group=mediwiki
+ 
+- name: install prequisite packages
+  yum: name={{ item }} state=present
+  with_items:
+    - httpd
+    - php
+    - php-mysql
+ 
+- name: download mediwiki
+  get_url: url=https://releases.wikimedia.org/mediawiki/1.28/mediawiki-1.28.1.tar.gz validate_certs=False dest=/tmp/mediwiki.tar.gz
+ 
+- name: extract mediwiki
+  unarchive: src=/tmp/mediwiki.tar.gz dest=/tmp/ copy=False
+ 
+- name: remove existing httpd html directory
+  file: path=/var/www/html state=absent recurse=no
+ 
+- name: copy mediwiki
+  command: cp -r /tmp/mediwiki /var/www/html
+- name: copy mediwiki configuration
+  command: cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+- name: configure db name
+  replace: dest=/var/www/html/wp-config.php regexp='database_name_here' replace="{{ db_name }}"
+- name: configure db username
+  replace: dest=/var/www/html/wp-config.php regexp='username_here' replace="{{ db_username }}"
+- name: configure db password
+  replace: dest=/var/www/html/wp-config.php regexp='password_here' replace="{{ db_password }}"
+- name: configure db host
+  replace: dest=/var/www/html/wp-config.php regexp='localhost' replace="{{ lookup('aws_rds_endpoint_name_from_instance_name', ('eu-west-1', db_name)) }}"
+ 
+- name: start httpd and ensure started on boot
+  service: name=httpd state=stopped enabled=yes
